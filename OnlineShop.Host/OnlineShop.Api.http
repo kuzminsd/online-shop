@@ -1,0 +1,44 @@
+@OnlineShop.Api_HostAddress = http://localhost:8081
+@ItemId1 = 450b826a-2593-4819-a43f-c861f0c33aeb
+@ItemId2 = 5799ffca-e58a-4f97-b183-6edfbbdb5572
+@ItemId3 = a93b9a2d-3990-4203-a2a0-623bb637d14b
+
+POST {{OnlineShop.Api_HostAddress}}/orders?userId=450b826a-2593-4819-a43f-c861f0c33aeb
+Accept: application/json
+
+###
+@OrderId = 6d02a92b-fa2b-479b-b45c-20a76092075e
+
+PUT {{OnlineShop.Api_HostAddress}}/orders/{{OrderId}}/items/{{ItemId1}}?amount=3
+Accept: application/json
+
+###
+
+PUT {{OnlineShop.Api_HostAddress}}/orders/{{OrderId}}/items/{{ItemId2}}?amount=3
+Accept: application/json
+
+###
+
+
+PUT {{OnlineShop.Api_HostAddress}}/orders/{{OrderId}}/items/{{ItemId3}}?amount=3
+Accept: application/json
+
+###
+
+POST {{OnlineShop.Api_HostAddress}}/orders/{{OrderId}}/bookings
+Accept: application/json
+
+###
+
+POST {{OnlineShop.Api_HostAddress}}/orders/{{OrderId}}/delivery?slot=123456
+Accept: application/json
+
+###
+
+POST {{OnlineShop.Api_HostAddress}}/orders/{{OrderId}}/payment
+Accept: application/json
+
+###
+
+GET {{OnlineShop.Api_HostAddress}}/orders/{{OrderId}}
+Accept: application/json
