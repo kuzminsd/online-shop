@@ -10,10 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineShop.Application", "O
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{ED75335B-0EDA-4C3D-A7B7-441D2080080A}"
 	ProjectSection(SolutionItems) = preProject
-		Common\docker-compose.yml = Common\docker-compose.yml
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
-		Common\Readme.txt = Common\Readme.txt
+		docker-compose.yml = docker-compose.yml
+		Readme.txt = Readme.txt
 	EndProjectSection
 EndProject
 Global

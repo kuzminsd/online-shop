@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OnlineShop.Application.Contracts.Data;
 using OnlineShop.Domain.Models;
 using OnlineShop.Domain.ValueObjects;
 
 namespace OnlineShop.Persistence.Repositories;
 
-public class OrderRepository(OnlineShopDbContext dbContext): IOrderRepository
+public class OrderRepository(OnlineShopDbContext dbContext, ILogger<OrderRepository> logger) : IOrderRepository
 {
     public async Task<Order> Create(Guid userId)
     {
@@ -24,9 +25,22 @@ public class OrderRepository(OnlineShopDbContext dbContext): IOrderRepository
 
     public async Task<bool> PutItemToOrder(Guid orderId, Guid itemId, int amount)
     {
-        //TODO: Check what's wrong with no tracking
-        var order = await dbContext.Orders.FirstAsync(x => x.Id == orderId);
-        order.OrderItems.Add(new OrderItem { OrderId = orderId, ItemId = itemId, Amount = amount });
+        var order = await dbContext.Orders
+            .Include(order => order.OrderItems)
+            .FirstAsync(x => x.Id == orderId);
+        
+        var item = order.OrderItems.FirstOrDefault(x => x.ItemId == itemId);
+
+        if (item is null)
+        {
+            item = new OrderItem { OrderId = orderId, ItemId = itemId, Amount = amount };
+            order.OrderItems.Add(item);
+        }
+        else
+        {
+            item.Amount += amount;
+        }
+
         await dbContext.SaveChangesAsync();
         return true;
     }
