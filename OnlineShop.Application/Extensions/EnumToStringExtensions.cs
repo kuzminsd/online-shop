@@ -19,8 +19,6 @@ public static class EnumToStringExtensions
     public static string ConvertToString(this PaymentStatus paymentStatus)
         => paymentStatus switch
         {
-            PaymentStatus.Created => "SUCCESS",
-            PaymentStatus.Submitted => "SUCCESS",
             PaymentStatus.Failed => "FAILED",
             PaymentStatus.Success => "SUCCESS",
             _ => "unknown"

@@ -13,40 +13,47 @@ public class PaymentService(
     IOrderRepository orderRepository,
     ILogger<PaymentService> logger): IPaymentService
 {
-    public async Task<Payment> StartPayment(Guid orderId, int amount)
+    public async Task<Payment> QueuePayment(Guid orderId, int amount)
     {
         var payment = await paymentRepository.Create(orderId, amount);
         logger.LogInformation("Payment {paymentId} for order {orderId} created", payment.Id, orderId);
         return payment;
     }
-    
-    public async Task Pay(Guid paymentId)
+
+    public async Task ProcessQueuedPayments()
     {
         const string serviceName = "test";
-        var accountName = "default-1";
-        try
-        {
-            logger.LogInformation("[{AccountName}] Submitting payment request for payment {PaymentId}", 
-                accountName,
-                paymentId);
+        var accountName = "default-4";
+        var queuedPayments = await paymentRepository.GetPaymentsForProcessing();
 
-            using var response = await paymentClient.Process(serviceName, accountName, paymentId);
-            var payment = await paymentRepository.FinishPayment(paymentId, response.IsSuccessStatusCode);
-            await orderRepository.UpdateStatus(payment.OrderId, OrderStatus.Payed);
-            logger.LogInformation("[{AccountName}] Submission finished for payment {PaymentId}: {Result}",
-                accountName,
-                paymentId,
-                response.IsSuccessStatusCode);
-
-        }
-        catch (Exception ex)
+        foreach (var payment in queuedPayments)
         {
-            logger.LogError("[{AccountName}] Submission failed for payment {PaymentId}: {ErrorMessage}",
-                accountName, 
-                paymentId,
-                ex.Message);
+            var paymentId = payment.Id;
             
-            await paymentRepository.FinishPayment(paymentId, false);
+            try
+            {
+                logger.LogInformation("[{AccountName}] Submitting payment request for payment {PaymentId}", 
+                    accountName,
+                    paymentId);
+
+                using var response = await paymentClient.Process(serviceName, accountName, paymentId); 
+                await paymentRepository.FinishPayment(paymentId, response.IsSuccessStatusCode);
+                await orderRepository.UpdateStatus(payment.OrderId, OrderStatus.Payed);
+                logger.LogInformation("[{AccountName}] Submission finished for payment {PaymentId}: {Result}",
+                    accountName,
+                    paymentId,
+                    response.IsSuccessStatusCode);
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("[{AccountName}] Submission failed for payment {PaymentId}: {ErrorMessage}",
+                    accountName, 
+                    paymentId,
+                    ex.Message);
+            
+                await paymentRepository.FinishPayment(paymentId, false);
+            }
         }
     }
 }

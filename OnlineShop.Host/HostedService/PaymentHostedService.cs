@@ -1,5 +1,4 @@
 ﻿using OnlineShop.Application.Contracts;
-using OnlineShop.Application.Contracts.Data;
 
 namespace OnlineShop.Host.HostedService;
 
@@ -16,16 +15,11 @@ public class PaymentHostedService(
             try
             {
                 await using var scope = serviceProvider.CreateAsyncScope();
-                var paymentRepository = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
                 var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
-                var paymentsForProcessing = await paymentRepository.GetPaymentsForProcessing();
+                var waitingTask = Task.Delay(_period, stoppingToken);
+                var paymentProcessTask = paymentService.ProcessQueuedPayments();
 
-                foreach (var payment in paymentsForProcessing)
-                {
-                    await paymentService.Pay(payment.Id);
-                }
-
-                await Task.Delay(_period, stoppingToken);
+                await Task.WhenAll(waitingTask, paymentProcessTask);
             }
             catch (Exception ex) when (ex is not TaskCanceledException)
             {

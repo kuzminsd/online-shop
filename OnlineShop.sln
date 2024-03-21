@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{ED7533
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
 		docker-compose.yml = docker-compose.yml
-		Readme.txt = Readme.txt
+		Readme.md = Readme.md
 	EndProjectSection
 EndProject
 Global

@@ -47,13 +47,18 @@ public class OrderService(
             ItemsMap = order.OrderItems.ToDictionary(k => k.ItemId, v => v.Amount),
             DeliveryId = order.DeliveryId,
             DeliveryDuration = delivery?.Duration,
-            PaymentHistory = payment.Select(x =>
+            PaymentHistory = payment
+                .Where(x => x.Status == PaymentStatus.Failed || x.Status == PaymentStatus.Success)
+                .Select(x =>
                 new PaymentInfo(
                     x.CreatedAt.Ticks, 
                     x.Status.ConvertToString(), 
                     x.Amount, 
                     x.Id))
         };
+
+        static IEnumerable<Payment> GetActualPaymentsInfo(IEnumerable<Payment> payments)
+            => payments;
     }
     
     public async Task<bool> PutItemToOrder(Guid orderId, Guid itemId, int amount)
@@ -73,7 +78,6 @@ public class OrderService(
             {
                 await itemService.Unbook(order.OrderItems.ToDictionary(k => k.ItemId, v => v.Amount));
                 await orderRepository.Unbook(orderId);
-                //await bookingRepository.Unbook(order.BookingId.GetValueOrDefault());
             }
             
             return await orderRepository.PutItemToOrder(orderId, itemId, amount);
@@ -104,18 +108,6 @@ public class OrderService(
             orderId,
             bookingResult.bookedItems.Select(x => x.Id).ToHashSet(),
             bookingResult.totalAmount);
-
-       /* await bookingRepository.AddBooking(bookingResult.bookedItems.Select(
-            x => new Booking()
-            {
-                Id = order.BookingId.GetValueOrDefault(),
-                OrderId = orderId,
-                ItemId = x.Id,
-                Amount = x.Amount,
-                Price = x.Price,
-                Booked = true,
-                CreatedAt = DateTime.UtcNow
-            }));*/
 
         return new BookingResult(order.BookingId.GetValueOrDefault(), failedItems);
     }
@@ -151,7 +143,7 @@ public class OrderService(
 
         await orderRepository.UpdateStatus(orderId, OrderStatus.PaymentInProgress);
        
-        var result = await paymentService.StartPayment(orderId, order.TotalPrice);
+        var result = await paymentService.QueuePayment(orderId, order.TotalPrice);
 
         return new PaymentSubmissionResult(result.CreatedAt.Ticks, result.Id);
     }

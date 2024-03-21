@@ -38,7 +38,8 @@ public class OrderRepository(OnlineShopDbContext dbContext, ILogger<OrderReposit
         }
         else
         {
-            item.Amount += amount;
+            //TODO: fix it
+            item.Amount = amount;
         }
 
         await dbContext.SaveChangesAsync();
